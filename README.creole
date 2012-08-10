@@ -1,10 +1,22 @@
 DjangoBB addon to enable source code comments in DjangoBB forum.
 
-**Early, experimental state**
+Early, experimental state: It doesn't work, yet ;)
+
+What's done:
+ * If User click on a source code block:
+ * get via AJAX the comment form
+ * Add form under the clicked code block
+ * highlight the source line
+ * get code line and line no in JS
+
+TODO:
+ * get post ID via jQuery tree traversal
+ * fill post ID and code line into form
+ * send form and create model entry (maybe via Ajax)
+ * add exiting comments data into page
+ * display existing comments in page via JS 
 
 Patches are welcome! Please send pull requests.
-
-Discuss here: http://support.djangobb.org/topic/335/
 
 
 == install ==
@@ -17,10 +29,18 @@ Needs [[https://github.com/jedie/DjangoBB/compare/lineno|DjangoBB 'lineno' branc
     'djangobb_code_comments',
 )
 }}}
- 
-edit **.../djangobb_forum/templates/djangobb_forum/base.html** and inser this to html header:
+**urls**
 {{{
-<script type="text/javascript" src="{{ STATIC_URL }}code_comments.js" onerror="JavaScript:alert('Error loading file [' + this.src + '] !');" ></script>
+urlpatterns += (
+    (r'^', include('djangobb_code_comments.urls')),
+)
+}}}
+ 
+edit **.../djangobb_forum/templates/djangobb_forum/base.html** and insert this to html header:
+{{{
+{% if user.is_authenticated %}
+    {% include "code_comments/includes/code_comments_head_js.html" %}
+{% endif %}
 }}}
 
 run e.g.:
@@ -32,7 +52,7 @@ run e.g.:
 
 == Links ==
 
-| Discuss this                   | http://support.djangobb.org/topic/335/
+| Discuss this addone here:      | http://support.djangobb.org/topic/335/
 | DjangoBB homepage              | http://djangobb.org/
 | DjangoBB support Forum         | http://support.djangobb.org/
 | DjangoBB sourcecode            | https://bitbucket.org/slav0nic/djangobb/
