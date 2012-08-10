@@ -1,20 +1,16 @@
 DjangoBB addon to enable source code comments in DjangoBB forum.
 
-Early, experimental state: It doesn't work, yet ;)
+**experimental**
 
 What's done:
- * If User click on a source code block:
- * get via AJAX the comment form
- * Add form under the clicked code block
- * highlight the source line
- * get code line and line no in JS
+ * User can add comments by click on a code line (via AJAX)
+ * all existing comments would be listed under the code block (via AJAX)
 
 TODO:
- * get post ID via jQuery tree traversal
- * fill post ID and code line into form
- * send form and create model entry (maybe via Ajax)
- * add exiting comments data into page
- * display existing comments in page via JS 
+ * add styles for a better look
+
+FIXME:
+ * add code block number (If in one post are more than one code block!) 
 
 Patches are welcome! Please send pull requests.
 
@@ -31,7 +27,7 @@ Needs [[https://github.com/jedie/DjangoBB/compare/lineno|DjangoBB 'lineno' branc
 }}}
 **urls**
 {{{
-urlpatterns += (
+urlpatterns += patterns('',
     (r'^', include('djangobb_code_comments.urls')),
 )
 }}}

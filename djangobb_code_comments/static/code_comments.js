@@ -61,6 +61,14 @@ function ajax_error_handler(XMLHttpRequest, textStatus, errorThrown) {
     log("ajax get response error!");
     log("textStatus:" + textStatus);
     log(XMLHttpRequest);
+    
+    var response_text = XMLHttpRequest.responseText;
+    log("response_text: '" + response_text + "'");
+    
+    // display error page
+    document.open();
+    document.write(response_text);
+    document.close();
 }
 function ajax_complete_handler(XMLHttpRequest, textStatus){
     log("response complete - status:" + textStatus + "("+XMLHttpRequest.status+")");
@@ -93,6 +101,73 @@ function get_comments_form() {
     return code_comments_form
 }
 
+function send_comment(post_id, line_no, comment){
+    log("send for post "+post_id+" line "+line_no+" comment:'"+comment+"'");
+    var post_data = {
+        "post": post_id,
+        "line_no": line_no,
+        "comment":comment
+    };
+    $.ajax({
+        async: false,
+        url: 'add_code_comment/',
+        type: "POST",
+        data: post_data,
+        dataType: "text",
+        success: function(data, textStatus) {
+            log("success, textStatus: " + textStatus);
+            log("data:"+data);
+            if (data=="RELOAD") {
+                location.reload(true);
+            } else {
+                alert("send comment error:"+data);
+            }
+        },
+        complete: ajax_complete_handler,
+        error: ajax_error_handler
+    });
+}
+function add_comment(post_id, line_no, username, comment){
+    log("add comment from '"+username+"' to post id:"+post_id);
+    var comment_html='<p title="line no '+line_no+'"><strong>'+username+'</strong>:'+comment+'</p>';
+    log(comment_html);
+    var obj=$("a[name=post-"+post_id+"]").nextAll("div").find("table.codetable");
+    if (obj.length!=1) {
+        log("Error: Can't get code block!");
+        return
+    };
+    obj.find("a[name=True-"+line_no+"]").after(comment_html);
+}
+function get_comments(){
+    var post_ids=new Array();
+    $("a[name^=post-]").each(function(index) {
+        var raw_post_id=$(this).attr("name");
+        //log("raw_post_id:"+raw_post_id);
+        var id = raw_post_id.split("-")[1];
+        //log("post id:"+id);
+        post_ids[post_ids.length] = id;
+    });
+    log("request comments for:" + post_ids);
+    var get_data = {
+        "post_ids":post_ids.join(" "),
+    }
+    log("request comments raw GET data:" + get_data);
+    $.ajax({
+        async: false,
+        url: 'get_code_comments/',
+        type: "GET",
+        data: get_data,
+        dataType: "json",
+        success: function(data, textStatus) {
+            log("data:"+data);
+            $(data).each(function(index) {
+                add_comment(this.post_id, this.line_no, this.username, this.comment);
+            });
+        },
+        complete: ajax_complete_handler,
+        error: ajax_error_handler
+    });
+}
 
 last_selected_lineno_obj=null;
 $(document).ready(function() {
@@ -101,9 +176,10 @@ $(document).ready(function() {
         if (obj.length!=1) {
             log("Error: Selector didn't match!");
             return
-        }
+        };
         log("click on text:" + obj.text());
 
+        // get the line on which the user have clicked
         var lineno_obj = obj.prevUntil("a").prev("a"); // pygments and click not on the first <span>
         if (lineno_obj.length!=1) {
             // no pygments or clicked on the first <span> code part
@@ -112,48 +188,69 @@ $(document).ready(function() {
         if (lineno_obj.length!=1) {
             log("Error: Can't get line <a> object.");
             return
-        }
-               
+        };
+        
+        //mark the complete code line:
         lineno_obj.nextUntil("a").css("background-color", "#ffffbb");
         
+        // get the line number:
         var raw_lineno = lineno_obj.attr("name")
         //log("raw_lineno:" + raw_lineno);
-        
         var lineno = raw_lineno.split("-")[1];
         log("lineno:" + lineno);
         
-TODO: how get the post ID ???
-        
-        //var post_obj = obj.prev($("a[name*=post]"));
-        var post_obj = obj.prev($("div[id^=p]"));
+        // traversal the post ID in which the clicked code block is
+        var post_obj = obj.parents(".blockpost");
         if (post_obj.length!=1) {
             log("Error: Can't get post div with the ID attribute.");
             return
-        }
-        var post_id = post_obj.attr("id");
-        log("post_id:"+post_id);
-        if (post_id==undefined) {
+        };
+        var raw_post_id = post_obj.attr("id");
+        //log("raw_post_id:"+raw_post_id);
+        if (raw_post_id==undefined) {
             log("Error: Can't get post id!");
             return
-        }
+        };
+        var post_id = raw_post_id.split("p")[1];
+        log("post_id:"+post_id);
+        
+        var form_id="code_comments_post_"+post_id;
         
         if (last_selected_lineno_obj!=null) {
+            // user has clicked in the past a other line
+            // -> unmark it
             last_selected_lineno_obj.nextUntil("a").css("background-color", "");
-        } else {
-            var form = get_comments_form()
-            log("form:"+form);
-            
-            $("table.codetable").after(form);            
         }
-        last_selected_lineno_obj=lineno_obj;        
+        last_selected_lineno_obj=lineno_obj;
         
-        $("form#code_comments").submit(function() {
+        // user clicked the first time on this code block
+        // -> get and add the comment form
+        var form_html = get_comments_form()
+        //log("form_html:"+form_html);
+
+        var table_obj=obj.parents("table.codetable")
+        log("add comment form, after:"+table_obj);
+        table_obj.after(form_html);
+        
+        // the the form as a object:
+        var form_obj=table_obj.next("form");
+        form_obj.attr("id", form_id)
+        log("set form id to:"+form_id)
+        
+        form_obj.submit(function() {
             log('Handler for .submit() called.');
-            
-            $("form#id_post")
-            $("form#id_line_no")
+            var comment_obj = $(this).find("#id_comment");
+            if (comment_obj.length!=1) {
+                log("Error: Can't get comment form field!");
+                return false
+            };
+            var comment=comment_obj.val();
+            send_comment(post_id, lineno, comment);
+            //$(this).find("#id_post").attr("value", post_id);
+            //$(this).find("#id_line_no").attr("value", lineno);
             return false;
         });
     });
+    get_comments()
 });
 log("code_comments.js loaded");

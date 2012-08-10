@@ -11,9 +11,10 @@
 
 from django.conf.urls import patterns, url
 
-from djangobb_code_comments.views import get_form, add_comments
+from djangobb_code_comments.views import get_form, add_comments, get_comments
 
 urlpatterns = patterns('',
     url('^topic/\d+/get_code_comments_form/$', get_form, name="get_form"),
-    url('^code_comments/add/$', add_comments, name="add_comments"),
+    url('^topic/\d+/get_code_comments/$', get_comments, name="get_comments"),
+    url('^topic/\d+/add_code_comment/$', add_comments, name="add_comments"),
 )
