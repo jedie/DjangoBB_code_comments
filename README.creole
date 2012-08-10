@@ -1,0 +1,10 @@
+DjangoBB addon to enable source code comments in DjangoBB forum.
+
+Discuss here: http://support.djangobb.org/topic/335/
+
+== Links ==
+
+| Discuss this                   | http://support.djangobb.org/topic/335/
+| DjangoBB homepage              | http://djangobb.org/
+| DjangoBB support Forum         | http://support.djangobb.org/
+| DjangoBB sourcecode            | https://bitbucket.org/slav0nic/djangobb/
