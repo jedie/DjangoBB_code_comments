@@ -11,16 +11,21 @@ function log() {
 log("code_comments.js loaded");
 
 $(document).ready(function() {
-    $("table.codetable .line").click(function() {
+    $("table.codetable span").click(function() {
         var obj=$(this);
         if (obj.length!=1) {
             log("selecte didn't match!");
             return
         }
         log("click on text:" + obj.text());
-        var raw_class=obj.attr("class");
-        //log("raw_class:" + raw_class);
-        var line_no = raw_class.split(" ")[1];
-        log("line no:" + line_no);
+        
+        obj.css('background-color', 'red');
+        
+        var raw_lineno = obj.prevAll("a").attr("name")
+        log("raw_lineno:" + raw_lineno);
+        
+        var lineno = raw_lineno.split("-")[1];
+        log("lineno:" + lineno);
+
     });
 });
