@@ -1,6 +1,34 @@
 DjangoBB addon to enable source code comments in DjangoBB forum.
 
+**Early, experimental state**
+
+Patches are welcome! Please send pull requests.
+
 Discuss here: http://support.djangobb.org/topic/335/
+
+
+== install ==
+
+Needs [[https://github.com/jedie/DjangoBB/compare/lineno|DjangoBB 'lineno' branch]], yet.
+
+**settings**
+{{{
+'INSTALLED_APPS' += (
+    'djangobb_code_comments',
+)
+}}}
+ 
+edit **.../djangobb_forum/templates/djangobb_forum/base.html** and inser this to html header:
+{{{
+<script type="text/javascript" src="{{ STATIC_URL }}code_comments.js" onerror="JavaScript:alert('Error loading file [' + this.src + '] !');" ></script>
+}}}
+
+run e.g.:
+{{{
+./manage.py syncdb
+./manage.py collectstatic --link
+}}}
+
 
 == Links ==
 
